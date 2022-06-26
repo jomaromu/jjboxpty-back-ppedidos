@@ -37,7 +37,7 @@ export class ProductoPedidoClass {
     const nombre = req.body.nombre;
     const precio = Number(req.body.precio);
     const descripcion = req.body.descripcion;
-    const fechaRegistro = moment.tz("America/Bogota").format("DD-MM-YYYY");
+    const fechaRegistro = moment.tz("America/Bogota").format("YYYY-MM-DD");
     const cliente = new mongoose.Types.ObjectId(req.body.cliente);
     const tipo = req.body.tipo;
     const delivery = Number(req.body.delivery);
@@ -63,7 +63,9 @@ export class ProductoPedidoClass {
             err
           );
         } else {
-          this.correoConfirmacionNuevoPedido(cliente);
+          const server = Server.instance;
+          server.io.emit("cargar-pedidos", {});
+          server.io.emit("obtener-ventas", {});
           this.respuestaJson(
             true,
             "Producto pedido creado",
@@ -188,6 +190,7 @@ export class ProductoPedidoClass {
   }
 
   verProductosPedidos(req: Request, resp: Response): void {
+    const idSocket: string = req.get("idSocket")!;
     ProductosPedidos.find({})
       .limit(10)
       .populate("cliente")
@@ -201,7 +204,7 @@ export class ProductoPedidoClass {
           );
         } else {
           const server = Server.instance;
-          server.io.emit("obtener-pedidos", {
+          server.io.to(idSocket).emit("obtener-pedidos", {
             ok: true,
             mensaje: "Productos pedidos encontrados",
             datas: productosPedidosDB,
@@ -524,6 +527,108 @@ export class ProductoPedidoClass {
       });
   }
 
+  eliminarPPedido(req: Request, resp: Response): void {
+    const id = new mongoose.Types.ObjectId(req.get("idPPedido"));
+    ProductosPedidos.findByIdAndDelete(id, (err: any, pPedidoDB: any) => {
+      if (err) {
+        return this.respuestaJson(
+          false,
+          "Error al eliminar el producto pedido",
+          resp,
+          err
+        );
+      } else {
+        return this.respuestaJson(
+          true,
+          "Producto pedido eliminado",
+          resp,
+          null,
+          pPedidoDB,
+          undefined
+        );
+      }
+    });
+  }
+
+  obtenerPedidosAnioActual(req: Request, resp: Response): void {
+    const anioActual = moment().year();
+
+    const fechaIniCast = `01-01-${anioActual}`;
+    const fechaFinalCast = `31-12-${anioActual}`;
+
+    const fecha = moment(`${fechaIniCast}`, "YYYY-MM-DD").format("YYYY-MM-DD");
+    const fechaFinal = moment(`${fechaFinalCast}`, "YYYY-MM-DD").format(
+      "YYYY-MM-DD"
+    );
+
+    ProductosPedidos.find(
+      {
+        $and: [
+          { fechaRegistro: { $gte: fecha } },
+          { fechaRegistro: { $lte: fechaFinal } },
+          { tipo: "Entregado" },
+        ],
+      },
+      (err: any, productosPedidosDB: any) => {
+        if (err) {
+          return this.respuestaJson(
+            false,
+            "Error al buscar productos pedidos",
+            resp,
+            err
+          );
+        } else {
+          return this.respuestaJson(
+            true,
+            "Productos pedidos encontrados",
+            resp,
+            null,
+            undefined,
+            productosPedidosDB
+          );
+        }
+      }
+    );
+  }
+
+  obtenerPedidosFecha(req: Request, resp: Response): void {
+    const fechaDesde = moment
+      .tz(req.get("fechaDesde"), "America/Bogota")
+      .format("YYYY-MM-DD");
+    const fechaHasta = moment
+      .tz(req.get("fechaHasta"), "America/Bogota")
+      .format("YYYY-MM-DD");
+
+    ProductosPedidos.find({
+      $and: [
+        { fechaRegistro: { $gte: fechaDesde, $lte: fechaHasta } },
+        { tipo: "Entregado" },
+      ],
+    })
+      .populate("cliente")
+      .exec((err: any, productosPedidosDB: any) => {
+        if (err) {
+          return this.respuestaJson(
+            false,
+            "Error al buscar Productos Pedidos",
+            resp,
+            err,
+            undefined,
+            productosPedidosDB
+          );
+        } else {
+          return this.respuestaJson(
+            true,
+            "P. Pedidos encontrados",
+            resp,
+            null,
+            undefined,
+            productosPedidosDB
+          );
+        }
+      });
+  }
+
   // GESTION CORREOS
 
   correoConfirmacionFactura(req: Request, resp: Response): void {
@@ -575,7 +680,8 @@ export class ProductoPedidoClass {
 
         const mailOptions: SMTPTransport.Options = {
           from: "JJBOXPTY <jjbox507@gmail.com>",
-          to: `${dataFactura.correoCliente}`,
+          // to: `${dataFactura.correoCliente}`,
+          to: `jomaromu2@gmail.com`,
           subject: "Confirmación factura",
           html: this.templateFactura(dataFactura),
         };
@@ -630,7 +736,8 @@ export class ProductoPedidoClass {
 
         const mailOptions: SMTPTransport.Options = {
           from: "JJBOXPTY <jjbox507@gmail.com>",
-          to: `${usuario!.correo}`,
+          // to: `${usuario!.correo}`,
+          to: `jomaromu2@gmail.com`,
           subject: "Nuevo paquete ha llegado",
           html: this.templateNuevoPedido(),
         };
@@ -644,29 +751,6 @@ export class ProductoPedidoClass {
     sendMail()
       .then((resp) => console.log(resp))
       .catch((err) => console.log(err));
-  }
-
-  eliminarPPedido(req: Request, resp: Response): void {
-    const id = new mongoose.Types.ObjectId(req.get("idPPedido"));
-    ProductosPedidos.findByIdAndDelete(id, (err: any, pPedidoDB: any) => {
-      if (err) {
-        return this.respuestaJson(
-          false,
-          "Error al eliminar el producto pedido",
-          resp,
-          err
-        );
-      } else {
-        return this.respuestaJson(
-          true,
-          "Producto pedido eliminado",
-          resp,
-          null,
-          pPedidoDB,
-          undefined
-        );
-      }
-    });
   }
 
   templateFactura(dataFactura: DataFactura): string {

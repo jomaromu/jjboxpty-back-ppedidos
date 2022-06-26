@@ -54,6 +54,14 @@ productosPedidos.get("/verProductosPedidos", (req: Request, resp: Response) => {
 });
 
 // ==================================================================== //
+// Ver Productos por año
+// ==================================================================== //
+productosPedidos.get("/obtenerPedidosAnioActual", (req: Request, resp: Response) => {
+  const obtenerPedidosAnioActual = new ProductoPedidoClass();
+  obtenerPedidosAnioActual.obtenerPedidosAnioActual(req, resp);
+});
+
+// ==================================================================== //
 // Ver Productos Pedidos
 // ==================================================================== //
 productosPedidos.get(
@@ -132,6 +140,17 @@ productosPedidos.get(
   (req: Request, resp: Response) => {
     const busquedaCriterioCliente = new ProductoPedidoClass();
     busquedaCriterioCliente.busquedaCriterioCliente(req, resp);
+  }
+);
+
+// ==================================================================== //
+// Busqueda por criterio fechas
+// ==================================================================== //
+productosPedidos.get(
+  "/obtenerPedidosFecha",
+  (req: Request, resp: Response) => {
+    const obtenerPedidosFecha = new ProductoPedidoClass();
+    obtenerPedidosFecha.obtenerPedidosFecha(req, resp);
   }
 );
 
