@@ -680,8 +680,8 @@ export class ProductoPedidoClass {
 
         const mailOptions: SMTPTransport.Options = {
           from: "JJBOXPTY <jjbox507@gmail.com>",
-          // to: `${dataFactura.correoCliente}`,
-          to: `jomaromu2@gmail.com`,
+          to: `${dataFactura.correoCliente}`,
+          // to: `jomaromu2@gmail.com`,
           subject: "Confirmación factura",
           html: this.templateFactura(dataFactura),
         };
@@ -736,8 +736,8 @@ export class ProductoPedidoClass {
 
         const mailOptions: SMTPTransport.Options = {
           from: "JJBOXPTY <jjbox507@gmail.com>",
-          // to: `${usuario!.correo}`,
-          to: `jomaromu2@gmail.com`,
+          to: `${usuario!.correo}`,
+          // to: `jomaromu2@gmail.com`,
           subject: "Nuevo paquete ha llegado",
           html: this.templateNuevoPedido(),
         };

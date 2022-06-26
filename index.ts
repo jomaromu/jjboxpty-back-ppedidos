@@ -34,7 +34,7 @@ mongoose.connect(
     console.log("Base de datos Online");
   }
 );
-
+ 
 // usar las rutas
 server.app.use("/productosPedidos", productosPedidos);
 
