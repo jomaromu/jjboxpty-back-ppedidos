@@ -21,8 +21,10 @@ export default class Server {
     // configuro io
     this.io = new socketIO.Server(this.httpServer, {
       cors: {
-        origin: true,
-        credentials: true,
+        origin: "https://back.jjboxpty.com",
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        // origin: true,
+        // credentials: true,
       },
       // path: "/ppedidos/",
     });
@@ -39,7 +41,7 @@ export default class Server {
 
     // this.io.of("/productoPedidos");
 
-    this.io.of('/productosPedidos').on("connection", () => {
+    this.io.of("/productosPedidos").on("connection", () => {
       console.log(`Cliente conectado a pedidos`);
     });
   }
