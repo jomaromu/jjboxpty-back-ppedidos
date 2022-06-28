@@ -24,7 +24,7 @@ export default class Server {
         origin: true,
         credentials: true,
       },
-      path: "/ppedidos/",
+      // path: "/ppedidos/",
     });
 
     this.escucharConexiones();
@@ -39,7 +39,7 @@ export default class Server {
 
     // this.io.of("/productoPedidos");
 
-    this.io.on("connection", () => {
+    this.io.of('/productosPedidos').on("connection", () => {
       console.log(`Cliente conectado a pedidos`);
     });
   }

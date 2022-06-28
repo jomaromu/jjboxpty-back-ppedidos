@@ -64,8 +64,8 @@ export class ProductoPedidoClass {
           );
         } else {
           const server = Server.instance;
-          server.io.emit("cargar-pedidos", {});
-          server.io.emit("obtener-ventas", {});
+          server.io.of("/productosPedidos").emit("cargar-pedidos", {});
+          server.io.of("/productosPedidos").emit("obtener-ventas", {});
           this.respuestaJson(
             true,
             "Producto pedido creado",
@@ -204,11 +204,14 @@ export class ProductoPedidoClass {
           );
         } else {
           const server = Server.instance;
-          server.io.to(idSocket).emit("obtener-pedidos", {
-            ok: true,
-            mensaje: "Productos pedidos encontrados",
-            datas: productosPedidosDB,
-          });
+          server.io
+            .of("/productosPedidos")
+            .to(idSocket)
+            .emit("obtener-pedidos", {
+              ok: true,
+              mensaje: "Productos pedidos encontrados",
+              datas: productosPedidosDB,
+            });
 
           return this.respuestaJson(
             true,
@@ -368,11 +371,14 @@ export class ProductoPedidoClass {
       });
     } else {
       const server = Server.instance;
-      server.io.to(idSocket).emit("obtener-pedidos-paginacion", {
-        ok: true,
-        mensaje: "Productos pedidos encontrados",
-        datas: productosPedidosDB,
-      });
+      server.io
+        .of("/productosPedidos")
+        .to(idSocket)
+        .emit("obtener-pedidos-paginacion", {
+          ok: true,
+          mensaje: "Productos pedidos encontrados",
+          datas: productosPedidosDB,
+        });
       return resp.json({
         ok: true,
         mensaje: "Productos pedidos encontrados",
@@ -436,7 +442,7 @@ export class ProductoPedidoClass {
             );
           } else {
             const server = Server.instance;
-            server.io.emit("historial-compras", {
+            server.io.of('/productosPedidos').emit("historial-compras", {
               ok: true,
               mensaje: "P. Pedidos encontrados",
               datas: productosPedidosDB,
@@ -474,7 +480,7 @@ export class ProductoPedidoClass {
           );
         } else {
           const server = Server.instance;
-          server.io.to(idSocket).emit("obtener-pedidos-criterio", {
+          server.io.of('/productosPedidos').to(idSocket).emit("obtener-pedidos-criterio", {
             ok: true,
             mensaje: "Productos pedidos encontrados",
             datas: productosPedidosDB,
