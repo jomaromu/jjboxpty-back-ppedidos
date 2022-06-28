@@ -24,6 +24,7 @@ export default class Server {
         origin: true,
         credentials: true,
       },
+      path: "/ppedidos/",
     });
 
     this.escucharConexiones();
@@ -34,10 +35,12 @@ export default class Server {
   }
 
   private escucharConexiones() {
-    console.log("Escuchando conexiones");
+    console.log("Escuchando conexiones de pedidos");
+
+    // this.io.of("/productoPedidos");
 
     this.io.on("connection", () => {
-      console.log(`Cliente conectado`);
+      console.log(`Cliente conectado a pedidos`);
     });
   }
 
