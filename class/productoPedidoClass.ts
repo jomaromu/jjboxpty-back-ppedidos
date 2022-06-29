@@ -192,7 +192,7 @@ export class ProductoPedidoClass {
   verProductosPedidos(req: Request, resp: Response): void {
     const idSocket: string = req.get("idSocket")!;
     ProductosPedidos.find({})
-      .limit(10)
+      .limit(100)
       .populate("cliente")
       .exec((err: any, productosPedidosDB: any) => {
         if (err) {
@@ -239,7 +239,7 @@ export class ProductoPedidoClass {
         },
       },
       {
-        $limit: 10,
+        $limit: 100,
       },
     ]);
 
