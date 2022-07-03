@@ -21,12 +21,12 @@ export default class Server {
     // configuro io
     this.io = new socketIO.Server(this.httpServer, {
       cors: {
-        origin: "*",
+        origin: "http://190.218.43.46",
         methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true,
         // origin: true,
-        // credentials: true,
       },
-      // path: "/ppedidos/",
+      // path: "/productosPedidos",
     });
 
     this.escucharConexiones();

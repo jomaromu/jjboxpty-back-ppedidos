@@ -1,12 +1,11 @@
 // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-import { Response, Request, response } from "express";
+import { Response, Request } from "express";
 import { CallbackError } from "mongoose";
 const mongoose = require("mongoose");
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import * as google from "googleapis";
-import path, { dirname } from "path";
+import path from "path";
+import fs from "fs";
 
 const moment = require("moment-timezone");
 moment.locale("es");
@@ -16,10 +15,13 @@ import Server from "./server";
 // modelo
 import Usuario from "../models/usuario";
 import ProductosPedidos from "../models/productosPedido";
+import datosgenerales from "../models/datosGenerales";
+import publicidad from "../models/publicidad";
 
 // interface
 import { UsuarioInterface } from "../interface/usuario";
 import { ProductosPedidosInterface } from "../interface/productosPedidos";
+import { DatosGenerales } from "../interface/datosGenerales";
 
 import { environment } from "../environment/environment";
 
@@ -239,7 +241,7 @@ export class ProductoPedidoClass {
         },
       },
       {
-        $limit: 100,
+        $limit: 10,
       },
     ]);
 
@@ -442,7 +444,7 @@ export class ProductoPedidoClass {
             );
           } else {
             const server = Server.instance;
-            server.io.of('/productosPedidos').emit("historial-compras", {
+            server.io.of("/productosPedidos").emit("historial-compras", {
               ok: true,
               mensaje: "P. Pedidos encontrados",
               datas: productosPedidosDB,
@@ -480,11 +482,14 @@ export class ProductoPedidoClass {
           );
         } else {
           const server = Server.instance;
-          server.io.of('/productosPedidos').to(idSocket).emit("obtener-pedidos-criterio", {
-            ok: true,
-            mensaje: "Productos pedidos encontrados",
-            datas: productosPedidosDB,
-          });
+          server.io
+            .of("/productosPedidos")
+            .to(idSocket)
+            .emit("obtener-pedidos-criterio", {
+              ok: true,
+              mensaje: "Productos pedidos encontrados",
+              datas: productosPedidosDB,
+            });
           return this.respuestaJson(
             true,
             "P. Pedidos encontrados",
@@ -633,6 +638,83 @@ export class ProductoPedidoClass {
           );
         }
       });
+  }
+
+  // DATOS GENERALES
+
+  obtenerDatosGenerales(req: Request, resp: Response): void {
+    const _id = new mongoose.Types.ObjectId("62bdbe203008b209da067141");
+
+    datosgenerales.findById(_id, (err: any, datos: any) => {
+      if (err) {
+        return resp.json({
+          ok: false,
+          mensaje: "Error al obtener datos generales",
+          err,
+        });
+      } else {
+        return resp.json({
+          ok: true,
+          data: datos,
+        });
+      }
+    });
+    // const data = path.resolve(__dirname, "../../assets/datos-generales.json");
+    // resp.sendFile(data);
+  }
+
+  guardarDatosGenerales(req: Request, resp: Response): void {
+    const datos: any = req.body.datos;
+
+    if (datos) {
+      const query = {
+        correo: datos.correo,
+        telefono: datos.telefono,
+        libraAerea: datos.libraAerea,
+        libraMaritima: datos.libraMaritima,
+        horario: datos.horario,
+        ubicacion: datos.ubicacion,
+        direccionMaritima: {
+          prefijo: datos.direccionMaritima.prefijo,
+          sufijo: datos.direccionMaritima.sufijo,
+          direccion: datos.direccionMaritima.direccion,
+          telefono: datos.direccionMaritima.telefono,
+          ciudad: datos.direccionMaritima.ciudad,
+          estado: datos.direccionMaritima.estado,
+          codigoPostal: datos.direccionMaritima.codigoPostal,
+        },
+        direccionAerea: {
+          prefijo: datos.direccionAerea.prefijo,
+          sufijo: datos.direccionAerea.sufijo,
+          direccion: datos.direccionAerea.direccion,
+          telefono: datos.direccionAerea.telefono,
+          ciudad: datos.direccionAerea.ciudad,
+          estado: datos.direccionAerea.estado,
+          codigoPostal: datos.direccionAerea.codigoPostal,
+        },
+      };
+      const _id = new mongoose.Types.ObjectId("62bdbe203008b209da067141");
+
+      datosgenerales.findOneAndUpdate(
+        { _id },
+        query,
+        { new: true },
+        (err: any, datos: any) => {
+          if (err) {
+            return resp.json({
+              ok: false,
+              mensaje: "Error al actualizar los datos",
+              err,
+            });
+          } else {
+            return resp.json({
+              ok: true,
+              data: datos,
+            });
+          }
+        }
+      );
+    }
   }
 
   // GESTION CORREOS
@@ -788,7 +870,7 @@ export class ProductoPedidoClass {
       </mj-column>
       
       <mj-column>
-      <mj-image width="80px" src="http://190.218.43.46:4002/productosPedidos/envioLogo" alt="Logo" padding="50px" />
+      <mj-image width="80px" src="https://back.jjboxpty.com/productosPedidos/envioLogo" alt="Logo" padding="50px" />
       </mj-column>
     </mj-section>
     
@@ -884,7 +966,7 @@ export class ProductoPedidoClass {
   <mj-body background-color="#bedae6">
     <mj-section>
       <mj-column width="100%">
-      <mj-image src="http://190.218.43.46:4002/productosPedidos/envioBanner" alt="Banner" padding="0px"></mj-image>
+      <mj-image src="https://back.jjboxpty.com/productosPedidos/envioBanner" alt="Banner" padding="0px"></mj-image>
       </mj-column>
     </mj-section>
     <mj-section padding-bottom="20px" padding-top="10px">
@@ -944,6 +1026,123 @@ export class ProductoPedidoClass {
     return resp.sendFile(
       path.resolve(__dirname, "../../assets/img-contacto.png")
     );
+  }
+
+  imgPublicidad(req: Request, resp: Response): void {
+    const archivo: any = req.files!.archivo;
+
+    if (!archivo) {
+      // console.log("no hay archivo");
+    } else {
+      const pathCarpeta = path.resolve(__dirname, "../../assets/publicidad");
+      const pathArchivo = path.join(pathCarpeta, "publicidad.png");
+
+      const moverArchivo = () => {
+        archivo.mv(pathArchivo, (err: any) => {
+          if (err) {
+            // console.log("error al mover archivo");
+            return resp.json({
+              ok: false,
+              mensaje: "Error al mover publicidad",
+              err,
+            });
+          } else {
+            // console.log("archivo movido");
+            return resp.json({
+              ok: true,
+              mensaje: "Archivo movido",
+            });
+          }
+        });
+      };
+
+      if (fs.existsSync(pathCarpeta)) {
+        // console.log("existe path");
+        moverArchivo();
+      } else {
+        // console.log("no existe path, crearlo y mover archivo");
+
+        fs.mkdir(pathCarpeta, (err) => {
+          if (err) {
+            // console.log("error al crear carpeta");
+            return resp.json({
+              ok: false,
+              mensaje: "Error al crear carpeta de publicidad",
+              err,
+            });
+          } else {
+            // console.log("carpeta creada");
+            moverArchivo();
+          }
+        });
+      }
+    }
+  }
+
+  enviarImgPublicidad(req: Request, resp: Response): any {
+    const pathPublicidad = path.resolve(
+      __dirname,
+      "../../assets/publicidad/publicidad.png"
+    );
+
+    return resp.sendFile(pathPublicidad);
+
+    // if (fs.existsSync(pathPublicidad)) {
+    //   return resp.json({
+    //     ok: true,
+    //     path: pathPublicidad,
+    //   });
+    // } else {
+    //   return resp.json({
+    //     ok: false,
+    //     mensaje: "No se encontró un path cree una publicidad",
+    //   });
+    // }
+  }
+
+  activarDesactivar(req: Request, resp: Response): void {
+    const _id = new mongoose.Types.ObjectId("62c05d8f3008b209da067148");
+
+    const estado: boolean = req.body.estado;
+
+    // console.log(estado);
+
+    const query = {
+      estado,
+    };
+
+    publicidad.findByIdAndUpdate(
+      _id,
+      query,
+      { new: true },
+      (err: any, publicidadDB: any) => {
+        if (err) {
+          return resp.json({
+            ok: false,
+            mensaje: "Error al editar estado de publicidad",
+            err,
+          });
+        } else {
+          return resp.json({
+            ok: true,
+            publicidadDB,
+          });
+        }
+      }
+    );
+  }
+
+  async estadoPublicidad(req: Request, resp: Response): Promise<any> {
+    const _id = new mongoose.Types.ObjectId("62c05d8f3008b209da067148");
+
+    const estado = await publicidad.findById(_id);
+
+    if (estado) {
+      return resp.json({ 
+        ok: true,
+        estado,
+      });
+    }
   }
 
   respuestaJson(
