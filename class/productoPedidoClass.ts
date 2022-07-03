@@ -643,7 +643,7 @@ export class ProductoPedidoClass {
   // DATOS GENERALES
 
   obtenerDatosGenerales(req: Request, resp: Response): void {
-    const _id = new mongoose.Types.ObjectId("62c05d8f3008b209da067148");
+    const _id = new mongoose.Types.ObjectId("62bdbe203008b209da067141");
 
     datosgenerales.findById(_id, (err: any, datos: any) => {
       if (err) {
@@ -693,7 +693,7 @@ export class ProductoPedidoClass {
           codigoPostal: datos.direccionAerea.codigoPostal,
         },
       };
-      const _id = new mongoose.Types.ObjectId("62c05d8f3008b209da067148");
+      const _id = new mongoose.Types.ObjectId("62bdbe203008b209da067141");
 
       datosgenerales.findOneAndUpdate(
         { _id },
